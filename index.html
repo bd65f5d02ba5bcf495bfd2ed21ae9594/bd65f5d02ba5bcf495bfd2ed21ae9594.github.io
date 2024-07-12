@@ -3,12 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>bd65f5d02ba5bcf495bfd2ed21ae9594</title>
+    <title>f</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
+    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
 </head>
-<body style="background-image: url('foto.jpg');">
-    <h1>bd65f5d02ba5bcf495bfd2ed21ae9594</h1>
-    <img src="foto.jpg">
-    <p>hey yalls</p>
+<body>
+    <div class="container">
+        <div class="top-box">
+            <div class="small-box" id="ent">
+                <div id="ent-preferences">
+                    <button class="ent-button" onclick="preferences()">
+                        <ion-icon name="musical-notes-outline"></ion-icon>
+                    </button>
+                    <h2>Preferences</h3>
+                    <input type="hidden" id='hidden_token'>
+                    <select multiple id="genre-select">
+                        <option value="classical">Classical</option>
+                        <option value="jazz">Jazz</option>
+                        <option value="rock">Rock</option>
+                        <option value="pop">Pop</option>
+                        <option value="hip-hop">Hip Hop</option>
+                        <option value="r-n-b">R&B</option>
+                        <option value="edm">EDM</option>
+                        <option value="country">Country</option>
+                        <option value="reggae">Reggae</option>
+                        <option value="blues">Blues</option>
+                        <option value="folk">Folk</option>
+                        <option value="world-music">World</option>
+                        <option value="metal">Metal</option>
+                        <option value="punk">Punk</option>
+                        <option value="gospel">Gospel</option>
+                        <option value="alternative">Alternative</option>
+                    </select>
+                    <div class="submit-container">
+                        <button id="ent-save" onclick="preferences()">
+                            <ion-icon name="checkmark-sharp" id="ent-check"></ion-icon>
+                        </button>
+                    </div>
+                </div>
+                <div id="ent-cover">
+                    <button class="ent-button" onclick="preferences()">
+                        <ion-icon name="settings-outline"></ion-icon>
+                    </button>
+                    <div class="ent-text-wrap">
+                        <p id="ent-cover-text">Today's Pick</p>
+                        <p id="ent-cover-text-cqi">Today's pick</p>
+                    </div>
+                    <div id="ent-album-cover">
+                        <img src="entImg.png" id="ent-album-img"></img>
+                    </div>
+                    <button id="ent-cover-button" onclick="reveal()">REVEAL</button>
+                </div>
+                <div id="ent-info">
+                    <button class="ent-button" onclick="preferences()">
+                        <ion-icon name="settings-outline"></ion-icon>
+                    </button>
+                    <div>
+                        <h1 class="ent-ellipsis" id="ent-title">Title</h1>
+                        <p class="ent-detail ent-ellipsis" id="ent-artist">artist</p>
+                    </div>
+                    <div id="ent-info-div2">
+                        <p class="ent-detail ent-ellipsis" id="ent-album-name">album</p>
+                        <p class="ent-detail" id="ent-year">year</p>
+                    </div>
+                    <div id="ent-info-div3">
+                        <audio id="track" controls style="display: none;">
+                            <source id="tracke" src="" type="audio/mpeg">
+                            Your browser does not support the audio element.
+                        </audio>
+                        <button class="ent-info-button" id="ent-back-button" onclick="flip()"><ion-icon name="chevron-back-sharp"></ion-icon></button>
+                        <a href="" class="ent-info-button" id="ent-link-button"><ion-icon name="link-sharp"></ion-icon></a>
+                        <button class="ent-info-button" id="ent-play-button" onclick="play()"><ion-icon name="play"></ion-icon></button>
+                    </div>
+                </div>
+            </div>
+            <div class="small-box" id="prod">
+                <div id="prod-main">
+                    <div class="pie animate no-round">
+                        <div class="tasks-text">0<br>to-do</div>
+                    </div>
+                </div>
+                <div class="state" id="to-do">
+                    <div class="tasks-container">
+                    </div>
+                </div>
+                <div class="state" id="in-progress">
+                    <div class="tasks-container"></div>
+                </div>
+                <div class="state" id="done">
+                    <div class="tasks-container"></div>
+                </div>
+                <div class="bottom-elements">
+                    <button class="control delete">×</button>
+                    <div class="bottom-circles">
+                        <button class="circle red"></button>
+                        <button class="circle orange"></button>
+                        <button class="circle green"></button>
+                    </div>
+                    <button class="control add">+</button>
+                </div>
+            </div>
+        </div>
+        <div class="bottom-box" id ="edu">
+        </div>
+    </div>
+    <script src="app.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </body>
 </html>
