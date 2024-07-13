@@ -317,107 +317,122 @@ function showDiv(div) {
     
     if (div !== prodMain) {
         const tasksContainer = div.querySelector('.tasks-container');
+        const tasks = tasksContainer.querySelectorAll('.tasks');
+        tasks.forEach(makeDraggable);
         sortTasks(tasksContainer);
     }
 }
 
-let draggedTask = null;
+// Function to add a new task
+function addTask() {
+    let currentOpenState;
+    if (toDo.style.display === 'block') {
+        currentOpenState = toDo;
+    } else if (inProgress.style.display === 'block') {
+        currentOpenState = inProgress;
+    } else if (done.style.display === 'block') {
+        currentOpenState = done;
+    } else {
+        // If no state is open, don't add a task
+        return;
+    }
+
+    const tasksContainer = currentOpenState.querySelector('.tasks-container');
+    const newTask = createTaskDiv();
+    tasksContainer.appendChild(newTask);
+    updateTaskDateColor(newTask, currentOpenState.id);
+    
+    sortTasks(tasksContainer);
+    updateTaskPositions(tasksContainer);
+    scrollToTask(newTask); // Scroll to the newly added task
+    updatePieChart();
+}
+
+// Function to create a new task div
+function createTaskDiv() {
+    const taskDiv = document.createElement('div');
+    taskDiv.className = 'tasks';
+    taskDiv.id = 'task-' + Date.now(); // Add a unique id
+    taskDiv.style.minHeight = '5em';
+    
+    const taskContent = document.createElement('div');
+    taskContent.className = 'task-content';
+    
+    const taskWritten = document.createElement('div');
+    taskWritten.className = 'task-written';
+    
+    const taskDate = document.createElement('div');
+    taskDate.className = 'task-date';
+
+    const taskWrittenText = document.createElement('div');
+    taskWrittenText.className = 'task-written-text';
+    taskWrittenText.contentEditable = true;
+
+    const taskDatePicker = document.createElement('input');
+    taskDatePicker.className = 'task-date-picker';
+    taskDatePicker.type = 'date';
+    
+    const taskDateDisplay = document.createElement('div');
+    taskDateDisplay.className = 'task-date-display';
+    taskDateDisplay.innerHTML = "Set Date";
+
+    taskDatePicker.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        if (isNaN(selectedDate.getTime())) {
+            // Date was removed
+            delete taskDiv.dataset.date;
+            taskDateDisplay.textContent = "Set Date";
+        } else {
+            // Date was set
+            const formattedDate = selectedDate.toLocaleDateString('en-US', { 
+                month: 'numeric', 
+                day: 'numeric',
+                year: 'numeric'
+            });
+            taskDateDisplay.textContent = formattedDate;
+            taskDiv.dataset.date = this.value; // Store the date in ISO format
+        }
+        sortTasks(taskDiv.closest('.tasks-container'));
+        scrollToTask(taskDiv); // Scroll to the task after sorting
+    });
+    
+    taskContent.appendChild(taskWritten);
+    taskContent.appendChild(taskDate);
+    taskWritten.appendChild(taskWrittenText);
+    taskDate.appendChild(taskDatePicker);
+    taskDate.appendChild(taskDateDisplay);
+    taskDiv.appendChild(taskContent);
+    
+    setupTaskResizeObserver(taskDiv);
+    makeDraggable(taskDiv);
+
+    return taskDiv;
+}
+
+function updateTaskPositions(container) {
+    const tasks = Array.from(container.children);
+    const lastUndatedTask = tasks.filter(task => !task.dataset.date).pop();
+    const firstDatedTask = tasks.find(task => task.dataset.date);
+
+    if (lastUndatedTask && firstDatedTask) {
+        container.insertBefore(firstDatedTask, lastUndatedTask.nextSibling);
+    }
+
+    sortTasks(container);
+}
+
+setupCategoryCircles();
+
 const categoryColors = {
     'to-do': '#C61414',
     'in-progress': '#DDBA3A',
     'done': '#8B8D3A'
 };
 
-// Function to create a new task div
-// function createTaskDiv() {
-//     const taskDiv = document.createElement('div');
-//     taskDiv.className = 'tasks';
-//     taskDiv.draggable = true;
-//     taskDiv.addEventListener('dragstart', dragStart);
-//     taskDiv.addEventListener('dragend', dragEnd);
-    
-//     const taskContent = document.createElement('div');
-//     taskContent.className = 'task-content';
-
-//     taskDiv.appendChild(taskContent);
-//     return taskDiv;
-// }
-
-function dragStart(e) {
-    draggedTask = this;
-    e.dataTransfer.setData('text/plain', this.id);
-    setTimeout(() => this.style.display = 'none', 0);
-}
-
-function dragEnd() {
-    this.style.display = 'block';
-    draggedTask = null;
-}
-
-function dragOver(e) {
-    e.preventDefault();
-    this.style.transform = 'scale(1.1)';
-}
-
-function dragLeave() {
-    this.style.transform = 'scale(1)';
-}
-
-function drop(e) {
-    e.preventDefault();
-    this.style.transform = 'scale(1)';
-    if (draggedTask) {
-        const categoryId = this.getAttribute('data-category');
-        const tasksContainer = document.querySelector(`#${categoryId} .tasks-container`);
-        tasksContainer.appendChild(draggedTask);
-        updateTaskDateColor(draggedTask, categoryId);
-        updatePieChart();
-    }
-}
-
 function updateTaskDateColor(taskDiv, categoryId) {
     const taskDate = taskDiv.querySelector('.task-date');
     taskDate.style.backgroundColor = categoryColors[categoryId];
 }
-
-// function addTask() {
-//     let currentOpenState;
-//     if (toDo.style.display === 'block') {
-//         currentOpenState = toDo;
-//     } else if (inProgress.style.display === 'block') {
-//         currentOpenState = inProgress;
-//     } else if (done.style.display === 'block') {
-//         currentOpenState = done;
-//     } else {
-//         // If no state is open, don't add a task
-//         return;
-//     }
-
-//     const tasksContainer = currentOpenState.querySelector('.tasks-container');
-//     const newTask = createTaskDiv();
-//     tasksContainer.appendChild(newTask);
-//     updateTaskDateColor(newTask, currentOpenState.id);
-
-//     updatePieChart();
-// }
-
-function setupCategoryCircles() {
-    const circles = document.querySelectorAll('.circle');
-    circles.forEach(circle => {
-        const category = circle.classList[1];
-        circle.setAttribute('data-category', category === 'red' ? 'to-do' : 
-                                             category === 'orange' ? 'in-progress' : 
-                                             category === 'green' ? 'done' : null);
-        circle.addEventListener('dragover', dragOver);
-        circle.addEventListener('dragleave', dragLeave);
-        circle.addEventListener('drop', drop);
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    APPController.init();
-    setupCategoryCircles();
-});
 
 // Event listeners for the buttons
 redButton.addEventListener('click', () => showDiv(toDo));
@@ -466,68 +481,26 @@ function updatePieChart() {
     }
 }
 
-// Function to create a new task div
-function createTaskDiv() {
-    const taskDiv = document.createElement('div');
-    taskDiv.className = 'tasks';
-    taskDiv.draggable = true;
-    taskDiv.style.minHeight = '35%';
-    taskDiv.addEventListener('dragstart', dragStart);
-    taskDiv.addEventListener('dragend', dragEnd);
-    
-    const taskContent = document.createElement('div');
-    taskContent.className = 'task-content';
-    
-    const taskWritten = document.createElement('div');
-    taskWritten.className = 'task-written';
-    
-    const taskDate = document.createElement('div');
-    taskDate.className = 'task-date';
-
-    const taskWrittenText = document.createElement('div');
-    taskWrittenText.className = 'task-written-text';
-    taskWrittenText.contentEditable = true;
-
-    const taskDatePicker = document.createElement('input');
-    taskDatePicker.className = 'task-date-picker';
-    taskDatePicker.type = 'date';
-    
-    const taskDateDisplay = document.createElement('div');
-    taskDateDisplay.className = 'task-date-display';
-    taskDateDisplay.innerHTML = "Set Date";
-
-    taskDatePicker.addEventListener('change', function() {
-        const selectedDate = new Date(this.value);
-        const formattedDate = selectedDate.toLocaleDateString('en-US', { 
-            month: 'numeric', 
-            day: 'numeric',
-            year: 'numeric'
-        });
-        taskDateDisplay.textContent = formattedDate;
-        taskDiv.dataset.date = this.value; // Store the date in ISO format
-        sortTasks(taskDiv.closest('.tasks-container'));
-    });
-    
-    taskContent.appendChild(taskWritten);
-    taskContent.appendChild(taskDate);
-    taskWritten.appendChild(taskWrittenText);
-    taskDate.appendChild(taskDatePicker);
-    taskDate.appendChild(taskDateDisplay);
-    taskDiv.appendChild(taskContent);
-    
-    setupTaskResizeObserver(taskDiv);
-
-    return taskDiv;
-}
-
 function sortTasks(container) {
     const tasks = Array.from(container.children);
-    tasks.sort((a, b) => {
-        const dateA = a.dataset.date ? new Date(a.dataset.date) : new Date(0);
-        const dateB = b.dataset.date ? new Date(b.dataset.date) : new Date(0);
+    const datedTasks = tasks.filter(task => task.dataset.date);
+    const undatedTasks = tasks.filter(task => !task.dataset.date);
+
+    // Sort dated tasks
+    datedTasks.sort((a, b) => {
+        const dateA = new Date(a.dataset.date);
+        const dateB = new Date(b.dataset.date);
         return dateA - dateB;
     });
-    tasks.forEach(task => container.appendChild(task));
+
+    // Clear container
+    container.innerHTML = '';
+
+    // Append undated tasks first, maintaining their order
+    undatedTasks.forEach(task => container.appendChild(task));
+
+    // Append dated tasks
+    datedTasks.forEach(task => container.appendChild(task));
 }
 
 function setupTaskResizeObserver(taskElement) {
@@ -545,7 +518,7 @@ function setupTaskResizeObserver(taskElement) {
             const contentHeightEm = entry.contentRect.height / rootFontSize;
             
             // Add a small buffer and ensure minimum height
-            const newHeightEm = Math.max(contentHeightEm + 1.5, '35%');
+            const newHeightEm = Math.max(contentHeightEm + 1.5, 5);
             
             requestAnimationFrame(() => {
                 const heightStyle = `${newHeightEm}em`;
@@ -560,29 +533,226 @@ function setupTaskResizeObserver(taskElement) {
     resizeObserver.observe(taskWrittenText);
 }
 
-function addTask() {
-    let currentOpenState;
-    if (toDo.style.display === 'block') {
-        currentOpenState = toDo;
-    } else if (inProgress.style.display === 'block') {
-        currentOpenState = inProgress;
-    } else if (done.style.display === 'block') {
-        currentOpenState = done;
-    } else {
-        // If no state is open, don't add a task
-        return;
-    }
-
-    const tasksContainer = currentOpenState.querySelector('.tasks-container');
-    const newTask = createTaskDiv();
-    tasksContainer.appendChild(newTask);
-    
-    updateTaskDateColor(newTask, currentOpenState.id);
-    
-    sortTasks(tasksContainer);
-    updatePieChart();
-}
-
 // Initially show the main div and update the pie chart
 showDiv(prodMain);
 updatePieChart();
+
+function makeDraggable(taskDiv) {
+    taskDiv.draggable = true;
+    taskDiv.addEventListener('dragstart', dragStart);
+    taskDiv.addEventListener('dragend', dragEnd);
+    
+    // touch event listeners (for mobile)
+    taskDiv.addEventListener('touchstart', touchStart, {passive: false});
+    taskDiv.addEventListener('touchmove', touchMove, {passive: false});
+    taskDiv.addEventListener('touchend', touchEnd);
+}
+
+function dragStart(e) {
+    const task = e.target;
+    e.dataTransfer.setData('text/plain', task.id);
+    setTimeout(() => task.classList.add('dragging'), 0);
+    e.dataTransfer.effectAllowed = 'move';
+}
+
+function dragEnd(e) {
+    e.target.classList.remove('dragging');
+}
+
+function setupCategoryCircles() {
+    const circles = document.querySelectorAll('.circle:not(.white)');
+    circles.forEach(circle => {
+        circle.addEventListener('dragover', dragOver);
+        circle.addEventListener('dragleave', dragLeave);
+        circle.addEventListener('drop', drop);
+        
+        // touch events for mobile
+        circle.addEventListener('touchstart', touchCircleStart, {passive: false});
+        circle.addEventListener('touchend', touchCircleEnd);
+    });
+
+    const taskContainers = document.querySelectorAll('.tasks-container');
+    taskContainers.forEach(container => {
+        container.addEventListener('dragover', dragOverTask);
+        container.addEventListener('drop', dropWithinContainer);
+    });
+}
+
+function dragOver(e) {
+    e.preventDefault();
+    e.target.style.transform = 'scale(1.4)';
+}
+
+function dragOverTask(e) {
+    e.preventDefault();
+    const draggable = document.querySelector('.dragging');
+    const container = e.currentTarget;
+    
+    // Allow dropping only if it's a different container or the task doesn't have a date
+    if (container !== draggable.parentElement || !draggable.dataset.date) {
+        const afterElement = getDragAfterElement(container, e.clientY);
+        
+        if (afterElement == null) {
+            container.appendChild(draggable);
+        } else {
+            container.insertBefore(draggable, afterElement);
+        }
+    }
+}
+
+// Helper function to determine where to place the dragged task
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.tasks:not(.dragging):not([data-date])')];
+
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function dragLeave(e) {
+    e.target.style.transform = '';
+}
+
+function drop(e) {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData('text');
+    const task = document.getElementById(taskId);
+    
+    let targetContainer;
+    if (e.target.classList.contains('red')) {
+        targetContainer = toDo.querySelector('.tasks-container');
+    } else if (e.target.classList.contains('orange')) {
+        targetContainer = inProgress.querySelector('.tasks-container');
+    } else if (e.target.classList.contains('green')) {
+        targetContainer = done.querySelector('.tasks-container');
+    }
+
+    if (targetContainer && targetContainer !== task.parentElement) {
+        targetContainer.appendChild(task);
+        updateTaskDateColor(task, targetContainer.closest('.state').id);
+        updateTaskPositions(targetContainer);
+        updatePieChart();
+        scrollToTask(task);
+    }
+
+    e.target.style.transform = '';
+}
+
+function dropWithinContainer(e) {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData('text');
+    const task = document.getElementById(taskId);
+    const container = e.currentTarget;
+
+    // Only allow reordering if the task doesn't have a date and it's in the same container
+    if (!task.dataset.date && container === task.parentElement) {
+        const afterElement = getDragAfterElement(container, e.clientY);
+        if (afterElement == null) {
+            container.appendChild(task);
+        } else {
+            container.insertBefore(task, afterElement);
+        }
+    } else if (container !== task.parentElement) {
+        // If it's a different container, allow the move
+        container.appendChild(task);
+        updateTaskDateColor(task, container.closest('.state').id);
+    }
+
+    sortTasks(container);
+    updatePieChart();
+    scrollToTask(task);
+}
+
+// function to handle scrolling to a specific task
+function scrollToTask(task) {
+    const container = task.closest('.tasks-container');
+    if (container.scrollHeight > container.clientHeight) {
+        const scrollPosition = task.offsetTop - container.clientHeight / 2 + task.clientHeight / 2;
+        container.scrollTo({
+            top: scrollPosition,
+            behavior: 'smooth'
+        });
+    }
+}
+
+let draggedTask = null;
+let touchStartY = 0;
+
+function touchStart(e) {
+    e.preventDefault();
+    draggedTask = this;
+    touchStartY = e.touches[0].clientY;
+    this.classList.add('dragging');
+}
+
+function touchMove(e) {
+    e.preventDefault();
+    if (!draggedTask) return;
+    
+    const touch = e.touches[0];
+    const container = draggedTask.closest('.tasks-container');
+    const afterElement = getDragAfterElement(container, touch.clientY);
+    
+    if (afterElement == null) {
+        container.appendChild(draggedTask);
+    } else {
+        container.insertBefore(draggedTask, afterElement);
+    }
+}
+
+function touchEnd(e) {
+    if (!draggedTask) return;
+    
+    draggedTask.classList.remove('dragging');
+    const newContainer = draggedTask.closest('.tasks-container');
+    const oldContainer = e.target.closest('.state');
+    
+    if (newContainer !== oldContainer) {
+        updateTaskDateColor(draggedTask, newContainer.closest('.state').id);
+    }
+    
+    updateTaskPositions(newContainer);
+    updatePieChart();
+    scrollToTask(draggedTask);
+    
+    draggedTask = null;
+}
+
+function touchCircleStart(e) {
+    e.preventDefault();
+    this.style.transform = 'scale(1.4)';
+}
+
+function touchCircleEnd(e) {
+    e.preventDefault();
+    this.style.transform = '';
+    
+    if (draggedTask) {
+        const circle = e.target;
+        let targetContainer;
+        
+        if (circle.classList.contains('red')) {
+            targetContainer = toDo.querySelector('.tasks-container');
+        } else if (circle.classList.contains('orange')) {
+            targetContainer = inProgress.querySelector('.tasks-container');
+        } else if (circle.classList.contains('green')) {
+            targetContainer = done.querySelector('.tasks-container');
+        }
+        
+        if (targetContainer && targetContainer !== draggedTask.parentElement) {
+            targetContainer.appendChild(draggedTask);
+            updateTaskDateColor(draggedTask, targetContainer.closest('.state').id);
+            updateTaskPositions(targetContainer);
+            updatePieChart();
+            scrollToTask(draggedTask);
+        }
+    }
+    
+    draggedTask = null;
+}
