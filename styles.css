@@ -434,8 +434,14 @@ select[multiple]:focus option:checked {
     border: none;
     border-radius: 50%;
     padding: 0;
+    transition: transform 0.2s ease;
 }
 
+.circle:hover {
+    transform: scale(1.1);
+}
+
+.white { background-color: #D9D0C5; }
 .red { background-color: #C61414; }
 .orange { background-color: #DDBB37; }
 .green { background-color: #949643; }
@@ -465,7 +471,22 @@ select[multiple]:focus option:checked {
 }
 
 .tasks-text {
+    font-family: 'Inter';
     text-align: center;
+    /* border: 1px solid black; */
+    width: 3em;
+    height: 3em;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.task-count {
+    height: 50%;
+}
+
+.unfinished-tasks {
+    font-size: calc(0.2vw + 0.5em);
 }
 
 .state {
@@ -474,18 +495,6 @@ select[multiple]:focus option:checked {
     height: 85%;
     top: 0;
 }
-
-/* #to-do {
-    background-color: #00FF00;
-}
-
-#in-progress {
-    background-color: blue;
-}
-
-#done {
-    background-color: pink;
-} */
 
 .tasks-container {
     width: 80%;
@@ -501,12 +510,22 @@ select[multiple]:focus option:checked {
 
 .tasks {
     width: 100%;
-    height: 0;
-    padding-bottom: 30%;
+    min-height: 35%;
     border-radius: 1em;
     margin-bottom: 5%;
     flex-shrink: 0;
     position: relative;
+    background-color: #774e4500;
+    transition: height 0.3s ease; /* Smooth transition for height changes */
+    cursor: move;
+}
+
+.tasks.dragging {
+    opacity: 0.5;
+}
+
+.task-content, .task-written, .task-date {
+    height: 100%;
 }
 
 .task-content {
@@ -526,18 +545,72 @@ select[multiple]:focus option:checked {
     position: absolute;
     top: 0;
     left: 0;
-    width: 80%;
+    width: 65%;
     height: 100%;
     background-color: #774E45;
-    border-radius: 50% 0 0 20%;
+    border-radius: 1em 0 0 1em;
+}
+
+.task-written-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    width: 80%;
+    min-height: 50%;
+    font-family: 'Inter';
+    font-size: calc(0.5vw + 0.5em);
+    color: #D9D0C5;
+    word-wrap: break-word;
+    overflow: hidden; /* Hide overflow initially */
+}
+
+.task-written [contenteditable]:focus {
+    outline: none;
 }
 
 .task-date {
     position: absolute;
     top: 0;
-    left: 80%;
-    width: 20%;
+    left: 65%;
+    width: 35%;
     height: 100%;
     background-color: #C61414;
-    border-radius: 0 22.5% 22.5% 0;
+    border-radius: 0 1em 1em 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.task-date-picker {
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 90%;
+    cursor: pointer;
+}
+
+.task-date-picker::-webkit-calendar-picker-indicator {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 50%;
+    filter: invert(1);
+}
+
+.task-date-display {
+    font-family: Inter;
+    font-size: calc(0.5vw + 0.5em);
+    color: #D9D0C5;
+    text-align: center;
+    pointer-events: none;
 }

@@ -295,6 +295,7 @@ const prodMain = document.getElementById('prod-main');
 const toDo = document.getElementById('to-do');
 const inProgress = document.getElementById('in-progress');
 const done = document.getElementById('done');
+const whiteButton = document.querySelector('.circle.white')
 const redButton = document.querySelector('.circle.red');
 const orangeButton = document.querySelector('.circle.orange');
 const greenButton = document.querySelector('.circle.green');
@@ -313,41 +314,116 @@ function hideAllDivs() {
 function showDiv(div) {
     hideAllDivs();
     div.style.display = 'block';
+    
+    if (div !== prodMain) {
+        const tasksContainer = div.querySelector('.tasks-container');
+        sortTasks(tasksContainer);
+    }
 }
+
+let draggedTask = null;
+const categoryColors = {
+    'to-do': '#C61414',
+    'in-progress': '#DDBA3A',
+    'done': '#8B8D3A'
+};
 
 // Function to create a new task div
-function createTaskDiv() {
-    const taskDiv = document.createElement('div');
-    taskDiv.className = 'tasks';
-    const taskContent = document.createElement('div');
-    taskContent.className = 'task-content';
-    taskDiv.appendChild(taskContent);
-    return taskDiv;
+// function createTaskDiv() {
+//     const taskDiv = document.createElement('div');
+//     taskDiv.className = 'tasks';
+//     taskDiv.draggable = true;
+//     taskDiv.addEventListener('dragstart', dragStart);
+//     taskDiv.addEventListener('dragend', dragEnd);
+    
+//     const taskContent = document.createElement('div');
+//     taskContent.className = 'task-content';
+
+//     taskDiv.appendChild(taskContent);
+//     return taskDiv;
+// }
+
+function dragStart(e) {
+    draggedTask = this;
+    e.dataTransfer.setData('text/plain', this.id);
+    setTimeout(() => this.style.display = 'none', 0);
 }
 
-function addTask() {
-    let currentOpenState;
-    if (toDo.style.display === 'block') {
-        currentOpenState = toDo;
-    } else if (inProgress.style.display === 'block') {
-        currentOpenState = inProgress;
-    } else if (done.style.display === 'block') {
-        currentOpenState = done;
-    } else {
-        // If no state is open, don't add a task
-        return;
+function dragEnd() {
+    this.style.display = 'block';
+    draggedTask = null;
+}
+
+function dragOver(e) {
+    e.preventDefault();
+    this.style.transform = 'scale(1.1)';
+}
+
+function dragLeave() {
+    this.style.transform = 'scale(1)';
+}
+
+function drop(e) {
+    e.preventDefault();
+    this.style.transform = 'scale(1)';
+    if (draggedTask) {
+        const categoryId = this.getAttribute('data-category');
+        const tasksContainer = document.querySelector(`#${categoryId} .tasks-container`);
+        tasksContainer.appendChild(draggedTask);
+        updateTaskDateColor(draggedTask, categoryId);
+        updatePieChart();
     }
-
-    const tasksContainer = currentOpenState.querySelector('.tasks-container');
-    const newTask = createTaskDiv();
-    tasksContainer.appendChild(newTask);
 }
+
+function updateTaskDateColor(taskDiv, categoryId) {
+    const taskDate = taskDiv.querySelector('.task-date');
+    taskDate.style.backgroundColor = categoryColors[categoryId];
+}
+
+// function addTask() {
+//     let currentOpenState;
+//     if (toDo.style.display === 'block') {
+//         currentOpenState = toDo;
+//     } else if (inProgress.style.display === 'block') {
+//         currentOpenState = inProgress;
+//     } else if (done.style.display === 'block') {
+//         currentOpenState = done;
+//     } else {
+//         // If no state is open, don't add a task
+//         return;
+//     }
+
+//     const tasksContainer = currentOpenState.querySelector('.tasks-container');
+//     const newTask = createTaskDiv();
+//     tasksContainer.appendChild(newTask);
+//     updateTaskDateColor(newTask, currentOpenState.id);
+
+//     updatePieChart();
+// }
+
+function setupCategoryCircles() {
+    const circles = document.querySelectorAll('.circle');
+    circles.forEach(circle => {
+        const category = circle.classList[1];
+        circle.setAttribute('data-category', category === 'red' ? 'to-do' : 
+                                             category === 'orange' ? 'in-progress' : 
+                                             category === 'green' ? 'done' : null);
+        circle.addEventListener('dragover', dragOver);
+        circle.addEventListener('dragleave', dragLeave);
+        circle.addEventListener('drop', drop);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    APPController.init();
+    setupCategoryCircles();
+});
 
 // Event listeners for the buttons
 redButton.addEventListener('click', () => showDiv(toDo));
 orangeButton.addEventListener('click', () => showDiv(inProgress));
 greenButton.addEventListener('click', () => showDiv(done));
-deleteButton.addEventListener('click', () => showDiv(prodMain));
+whiteButton.addEventListener('click', () => showDiv(prodMain));
 addButton.addEventListener('click', addTask);
 
 // Initially show the main div
@@ -365,6 +441,7 @@ function updatePieChart() {
     const inProgressTasks = inProgress.querySelectorAll('.tasks').length;
     const doneTasks = done.querySelectorAll('.tasks').length;
     const totalTasks = todoTasks + inProgressTasks + doneTasks;
+    const remainingTasks = todoTasks + inProgressTasks;
 
     if (totalTasks === 0) return;
 
@@ -378,14 +455,25 @@ function updatePieChart() {
     pie.style.setProperty('--p3', donePercentage);
 
     // Update the task count
-    const tasksText = pie.querySelector('.tasks-text');
-    tasksText.innerHTML = `${todoTasks}<br>to-do`;
+    const taskCount = pie.querySelector('.task-count');
+    taskCount.innerHTML = `${remainingTasks}`;
+
+    const unfinishedTasks = pie.querySelector('.unfinished-tasks');
+    if(remainingTasks===1){
+        unfinishedTasks.innerHTML = `unfinished task`;
+    }else{
+        unfinishedTasks.innerHTML = `unfinished tasks`;
+    }
 }
 
 // Function to create a new task div
 function createTaskDiv() {
     const taskDiv = document.createElement('div');
     taskDiv.className = 'tasks';
+    taskDiv.draggable = true;
+    taskDiv.style.minHeight = '35%';
+    taskDiv.addEventListener('dragstart', dragStart);
+    taskDiv.addEventListener('dragend', dragEnd);
     
     const taskContent = document.createElement('div');
     taskContent.className = 'task-content';
@@ -395,12 +483,81 @@ function createTaskDiv() {
     
     const taskDate = document.createElement('div');
     taskDate.className = 'task-date';
+
+    const taskWrittenText = document.createElement('div');
+    taskWrittenText.className = 'task-written-text';
+    taskWrittenText.contentEditable = true;
+
+    const taskDatePicker = document.createElement('input');
+    taskDatePicker.className = 'task-date-picker';
+    taskDatePicker.type = 'date';
+    
+    const taskDateDisplay = document.createElement('div');
+    taskDateDisplay.className = 'task-date-display';
+    taskDateDisplay.innerHTML = "Set Date";
+
+    taskDatePicker.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        const formattedDate = selectedDate.toLocaleDateString('en-US', { 
+            month: 'numeric', 
+            day: 'numeric',
+            year: 'numeric'
+        });
+        taskDateDisplay.textContent = formattedDate;
+        taskDiv.dataset.date = this.value; // Store the date in ISO format
+        sortTasks(taskDiv.closest('.tasks-container'));
+    });
     
     taskContent.appendChild(taskWritten);
     taskContent.appendChild(taskDate);
+    taskWritten.appendChild(taskWrittenText);
+    taskDate.appendChild(taskDatePicker);
+    taskDate.appendChild(taskDateDisplay);
     taskDiv.appendChild(taskContent);
     
+    setupTaskResizeObserver(taskDiv);
+
     return taskDiv;
+}
+
+function sortTasks(container) {
+    const tasks = Array.from(container.children);
+    tasks.sort((a, b) => {
+        const dateA = a.dataset.date ? new Date(a.dataset.date) : new Date(0);
+        const dateB = b.dataset.date ? new Date(b.dataset.date) : new Date(0);
+        return dateA - dateB;
+    });
+    tasks.forEach(task => container.appendChild(task));
+}
+
+function setupTaskResizeObserver(taskElement) {
+    const taskContent = taskElement.querySelector('.task-content');
+    const taskWrittenText = taskElement.querySelector('.task-written-text');
+    const taskWritten = taskElement.querySelector('.task-written');
+    const taskDate = taskElement.querySelector('.task-date');
+
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            // Get the root font size for em calculations
+            const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
+            
+            // Calculate the content height in em
+            const contentHeightEm = entry.contentRect.height / rootFontSize;
+            
+            // Add a small buffer and ensure minimum height
+            const newHeightEm = Math.max(contentHeightEm + 1.5, '35%');
+            
+            requestAnimationFrame(() => {
+                const heightStyle = `${newHeightEm}em`;
+                taskElement.style.height = heightStyle;
+                taskContent.style.height = heightStyle;
+                taskWritten.style.height = heightStyle;
+                taskDate.style.height = heightStyle;
+            });
+        }
+    });
+
+    resizeObserver.observe(taskWrittenText);
 }
 
 function addTask() {
@@ -419,18 +576,13 @@ function addTask() {
     const tasksContainer = currentOpenState.querySelector('.tasks-container');
     const newTask = createTaskDiv();
     tasksContainer.appendChild(newTask);
-
+    
+    updateTaskDateColor(newTask, currentOpenState.id);
+    
+    sortTasks(tasksContainer);
     updatePieChart();
 }
-
-// Event listeners for the buttons
-redButton.addEventListener('click', () => { showDiv(toDo); updatePieChart(); });
-orangeButton.addEventListener('click', () => { showDiv(inProgress); updatePieChart(); });
-greenButton.addEventListener('click', () => { showDiv(done); updatePieChart(); });
-deleteButton.addEventListener('click', () => showDiv(prodMain));
-addButton.addEventListener('click', addTask);
 
 // Initially show the main div and update the pie chart
 showDiv(prodMain);
 updatePieChart();
-
