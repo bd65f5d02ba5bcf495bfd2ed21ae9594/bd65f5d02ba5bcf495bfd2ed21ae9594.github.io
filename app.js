@@ -64,14 +64,21 @@ function sleep(ms) {
 }
 
 var count = 0;
+var preview = false;
 function play(){
-    if(count==0){
-        count = 1;
-        document.getElementById("track").load();
-        document.getElementById("track").play();
-    } else{
-        count = 0;
-        document.getElementById("track").pause();
+    if(preview){
+        if(count==0){
+            count = 1;
+            document.getElementById("track").load();
+            document.getElementById("track").play();
+            document.getElementById("play-button").innerHTML = '<ion-icon name="pause" onclick="play()"></ion-icon>';
+            document.getElementById("play-button").style.paddingLeft = "0%";
+        } else{
+            count = 0;
+            document.getElementById("track").pause();
+            document.getElementById("play-button").innerHTML = '<ion-icon name="play" onclick="play()"></ion-icon>'
+            document.getElementById("play-button").style.paddingLeft = "2.25%";
+        }
     }
 }
 
@@ -235,10 +242,12 @@ const UIController = (function() {
         displayRecommendation(track) {
             if(track.preview_url){
                 document.getElementById("trackSrc").src = track.preview_url;
+                preview = true;
             } else{
                 console.log('No audio preview.');
                 document.getElementById("play-button").style.backgroundColor = '#774E45';
                 document.getElementById("play-button").style.borderColor = '#774E45';
+                preview = false;
             }
 
             console.log(track.preview_url)
@@ -253,8 +262,6 @@ const UIController = (function() {
             document.getElementById("album-name").textContent = track.album.name;
             document.getElementById("year").textContent = track.album.release_date.split('-')[0];
             document.getElementById("track-link").href = track.external_urls.spotify;
-
-            // document.getElementById("ent-cover-text-cqi").textContent = track.name;
         },
 
         storeToken(value) {
