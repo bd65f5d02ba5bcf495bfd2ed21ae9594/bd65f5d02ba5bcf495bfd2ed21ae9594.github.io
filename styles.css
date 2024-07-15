@@ -72,7 +72,11 @@ button {
 }
 
 .ent-button:hover {
-    transform: scale(1.1);
+    transform: scale(1.2);
+}
+
+.ent-button:focus {
+    color: #592E20;
 }
 
 .side {
@@ -230,7 +234,7 @@ select[multiple]:focus option:checked {
 #ent-save button:hover {
     background-color: #592E20;
     border-color: #592E20;
-    transform: scale(1.05);
+    transform: scale(1.07);
 }
 
 #ent-cover {
@@ -288,7 +292,7 @@ select[multiple]:focus option:checked {
 }
 
 #ent-cover .ent-bottom button:hover {
-    transform: scale(1.05);
+    transform: scale(1.07);
 }
 
 #album-img {
@@ -395,8 +399,8 @@ select[multiple]:focus option:checked {
 
 .info-button:hover,
 .info-button a:hover,
-#plat-button:hover {
-    transform: scale(1.1);
+#play-button:hover {
+    transform: scale(1.17);
 }
 
 #play-button {
