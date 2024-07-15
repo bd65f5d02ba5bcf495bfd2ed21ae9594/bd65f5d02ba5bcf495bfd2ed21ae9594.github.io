@@ -318,7 +318,7 @@ function showDiv(div) {
     if (div !== prodMain) {
         const tasksContainer = div.querySelector('.tasks-container');
         const tasks = tasksContainer.querySelectorAll('.tasks');
-        tasks.forEach(makeDraggable);
+        tasks.forEach(makeDraggableOrSelectable);
         sortTasks(tasksContainer);
     }
 }
@@ -344,8 +344,9 @@ function addTask() {
     
     sortTasks(tasksContainer);
     updateTaskPositions(tasksContainer);
-    scrollToTask(newTask); // Scroll to the newly added task
+    scrollToTask(newTask);
     updatePieChart();
+    updateAllEmptyStates();
 }
 
 // Function to create a new task div
@@ -403,8 +404,26 @@ function createTaskDiv() {
     taskDate.appendChild(taskDateDisplay);
     taskDiv.appendChild(taskContent);
     
+    if (isMobile()) {
+        const reorderButtons = document.createElement('div');
+        reorderButtons.className = 'reorder-buttons';
+        
+        const upButton = document.createElement('button');
+        upButton.textContent = '↑';
+        upButton.addEventListener('click', (e) => reorderTask(e, 'up'));
+        
+        const downButton = document.createElement('button');
+        downButton.textContent = '↓';
+        downButton.addEventListener('click', (e) => reorderTask(e, 'down'));
+        
+        reorderButtons.appendChild(upButton);
+        reorderButtons.appendChild(downButton);
+        
+        taskDiv.appendChild(reorderButtons);
+    }
+
     setupTaskResizeObserver(taskDiv);
-    makeDraggable(taskDiv);
+    makeDraggableOrSelectable(taskDiv);
 
     return taskDiv;
 }
@@ -445,6 +464,14 @@ addButton.addEventListener('click', addTask);
 showDiv(prodMain);
 
 // Update scroll visibility for all states initially
+function updateScrollVisibility(container) {
+    if (container.scrollHeight > container.clientHeight) {
+        container.style.overflowY = 'scroll';
+    } else if (container.scrollHeight < container.clientHeight) {
+        container.style.overflowY = 'hidden';
+    }
+}
+
 [toDo, inProgress, done].forEach(state => {
     const container = state.querySelector('.tasks-container');
     updateScrollVisibility(container);
@@ -458,26 +485,36 @@ function updatePieChart() {
     const totalTasks = todoTasks + inProgressTasks + doneTasks;
     const remainingTasks = todoTasks + inProgressTasks;
 
-    if (totalTasks === 0) return;
+    const pie = document.querySelector('.pie');
+    const taskCount = pie.querySelector('.task-count');
+    const unfinishedTasks = pie.querySelector('.unfinished-tasks');
+
+    if (totalTasks === 0) {
+        // Reset the pie chart when there are no tasks
+        pie.style.setProperty('--p1', 0);
+        pie.style.setProperty('--p2', 0);
+        pie.style.setProperty('--p3', 0);
+        taskCount.innerHTML = '0';
+        unfinishedTasks.innerHTML = 'unfinished tasks';
+        return;
+    }
 
     const todoPercentage = (todoTasks / totalTasks) * 100;
     const inProgressPercentage = (inProgressTasks / totalTasks) * 100;
     const donePercentage = (doneTasks / totalTasks) * 100;
 
-    const pie = document.querySelector('.pie');
     pie.style.setProperty('--p1', todoPercentage);
     pie.style.setProperty('--p2', inProgressPercentage);
     pie.style.setProperty('--p3', donePercentage);
 
     // Update the task count
-    const taskCount = pie.querySelector('.task-count');
     taskCount.innerHTML = `${remainingTasks}`;
 
-    const unfinishedTasks = pie.querySelector('.unfinished-tasks');
-    if(remainingTasks===1){
-        unfinishedTasks.innerHTML = `unfinished task`;
-    }else{
-        unfinishedTasks.innerHTML = `unfinished tasks`;
+    // Update the text
+    if (remainingTasks === 1) {
+        unfinishedTasks.innerHTML = 'unfinished task';
+    } else {
+        unfinishedTasks.innerHTML = 'unfinished tasks';
     }
 }
 
@@ -537,15 +574,26 @@ function setupTaskResizeObserver(taskElement) {
 showDiv(prodMain);
 updatePieChart();
 
-function makeDraggable(taskDiv) {
-    taskDiv.draggable = true;
-    taskDiv.addEventListener('dragstart', dragStart);
-    taskDiv.addEventListener('dragend', dragEnd);
+function makeDraggableOrSelectable(taskDiv) {
+    if (isMobile()) {
+        taskDiv.addEventListener('click', selectTask);
+    } else {
+        taskDiv.draggable = true;
+        taskDiv.addEventListener('dragstart', dragStart);
+        taskDiv.addEventListener('dragend', dragEnd);
+    }
+}
+
+let selectedTask = null;
+
+function selectTask(e) {
+    if (selectedTask) {
+        selectedTask.classList.remove('selected');
+    }
     
-    // touch event listeners (for mobile)
-    taskDiv.addEventListener('touchstart', touchStart, {passive: false});
-    taskDiv.addEventListener('touchmove', touchMove, {passive: false});
-    taskDiv.addEventListener('touchend', touchEnd);
+    const task = e.currentTarget;
+    task.classList.add('selected');
+    selectedTask = task;
 }
 
 function dragStart(e) {
@@ -562,20 +610,31 @@ function dragEnd(e) {
 function setupCategoryCircles() {
     const circles = document.querySelectorAll('.circle:not(.white)');
     circles.forEach(circle => {
-        circle.addEventListener('dragover', dragOver);
-        circle.addEventListener('dragleave', dragLeave);
-        circle.addEventListener('drop', drop);
-        
-        // touch events for mobile
-        circle.addEventListener('touchstart', touchCircleStart, {passive: false});
-        circle.addEventListener('touchend', touchCircleEnd);
+        if (isMobile()) {
+            circle.addEventListener('click', moveTask);
+        } else {
+            circle.addEventListener('dragover', dragOver);
+            circle.addEventListener('dragleave', dragLeave);
+            circle.addEventListener('drop', drop);
+        }
     });
 
-    const taskContainers = document.querySelectorAll('.tasks-container');
-    taskContainers.forEach(container => {
-        container.addEventListener('dragover', dragOverTask);
-        container.addEventListener('drop', dropWithinContainer);
-    });
+    if (!isMobile()) {
+        const taskContainers = document.querySelectorAll('.tasks-container');
+        taskContainers.forEach(container => {
+            container.addEventListener('dragover', dragOverTask);
+            container.addEventListener('drop', dropWithinContainer);
+        });
+    }
+
+    const deleteButton = document.querySelector('.control.delete');
+    if (isMobile()) {
+        deleteButton.addEventListener('click', deleteSelectedTask);
+    } else {
+        deleteButton.addEventListener('dragover', dragOverDelete);
+        deleteButton.addEventListener('dragleave', dragLeaveDelete);
+        deleteButton.addEventListener('drop', dropDelete);
+    }
 }
 
 function dragOver(e) {
@@ -639,6 +698,7 @@ function drop(e) {
         updateTaskPositions(targetContainer);
         updatePieChart();
         scrollToTask(task);
+        updateAllEmptyStates();
     }
 
     e.target.style.transform = '';
@@ -667,6 +727,28 @@ function dropWithinContainer(e) {
     sortTasks(container);
     updatePieChart();
     scrollToTask(task);
+    updateAllEmptyStates();
+}
+
+function dragOverDelete(e) {
+    e.preventDefault();
+    e.target.classList.add('delete-hover');
+}
+
+function dragLeaveDelete(e) {
+    e.target.classList.remove('delete-hover');
+}
+
+function dropDelete(e) {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData('text');
+    const task = document.getElementById(taskId);
+    if (task) {
+        task.remove();
+        updatePieChart();
+        updateAllEmptyStates();
+    }
+    e.target.classList.remove('delete-hover');
 }
 
 // function to handle scrolling to a specific task
@@ -681,78 +763,83 @@ function scrollToTask(task) {
     }
 }
 
-let draggedTask = null;
-let touchStartY = 0;
-
-function touchStart(e) {
-    e.preventDefault();
-    draggedTask = this;
-    touchStartY = e.touches[0].clientY;
-    this.classList.add('dragging');
-}
-
-function touchMove(e) {
-    e.preventDefault();
-    if (!draggedTask) return;
+function updateEmptyState(container) {
+    const tasks = container.querySelectorAll('.tasks');
+    let emptyState = container.querySelector('.empty-state');
     
-    const touch = e.touches[0];
-    const container = draggedTask.closest('.tasks-container');
-    const afterElement = getDragAfterElement(container, touch.clientY);
-    
-    if (afterElement == null) {
-        container.appendChild(draggedTask);
-    } else {
-        container.insertBefore(draggedTask, afterElement);
-    }
-}
-
-function touchEnd(e) {
-    if (!draggedTask) return;
-    
-    draggedTask.classList.remove('dragging');
-    const newContainer = draggedTask.closest('.tasks-container');
-    const oldContainer = e.target.closest('.state');
-    
-    if (newContainer !== oldContainer) {
-        updateTaskDateColor(draggedTask, newContainer.closest('.state').id);
-    }
-    
-    updateTaskPositions(newContainer);
-    updatePieChart();
-    scrollToTask(draggedTask);
-    
-    draggedTask = null;
-}
-
-function touchCircleStart(e) {
-    e.preventDefault();
-    this.style.transform = 'scale(1.4)';
-}
-
-function touchCircleEnd(e) {
-    e.preventDefault();
-    this.style.transform = '';
-    
-    if (draggedTask) {
-        const circle = e.target;
-        let targetContainer;
-        
-        if (circle.classList.contains('red')) {
-            targetContainer = toDo.querySelector('.tasks-container');
-        } else if (circle.classList.contains('orange')) {
-            targetContainer = inProgress.querySelector('.tasks-container');
-        } else if (circle.classList.contains('green')) {
-            targetContainer = done.querySelector('.tasks-container');
+    if (tasks.length === 0) {
+        if (!emptyState) {
+            emptyState = document.createElement('div');
+            emptyState.classList.add('empty-state');
+            const state = container.closest('.state').id;
+            const message = {
+                'to-do': 'There are no tasks to do.',
+                'in-progress': 'There are no tasks in progress.',
+                'done': 'There are no tasks completed.'
+            }[state];
+            emptyState.textContent = message;
+            container.appendChild(emptyState);
         }
-        
-        if (targetContainer && targetContainer !== draggedTask.parentElement) {
-            targetContainer.appendChild(draggedTask);
-            updateTaskDateColor(draggedTask, targetContainer.closest('.state').id);
-            updateTaskPositions(targetContainer);
-            updatePieChart();
-            scrollToTask(draggedTask);
-        }
+        emptyState.style.display = 'block';
+    } else if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+}
+
+function updateAllEmptyStates() {
+    const containers = document.querySelectorAll('.tasks-container');
+    containers.forEach(updateEmptyState);
+}
+
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+function moveTask(e) {
+    if (!selectedTask) return;
+
+    let targetContainer;
+    if (e.target.classList.contains('red')) {
+        targetContainer = toDo.querySelector('.tasks-container');
+    } else if (e.target.classList.contains('orange')) {
+        targetContainer = inProgress.querySelector('.tasks-container');
+    } else if (e.target.classList.contains('green')) {
+        targetContainer = done.querySelector('.tasks-container');
+    }
+
+    if (targetContainer && targetContainer !== selectedTask.parentElement) {
+        targetContainer.appendChild(selectedTask);
+        updateTaskDateColor(selectedTask, targetContainer.closest('.state').id);
+        updateTaskPositions(targetContainer);
+        updatePieChart();
+        scrollToTask(selectedTask);
+        updateAllEmptyStates();
+    }
+
+    selectedTask.classList.remove('selected');
+    selectedTask = null;
+}
+
+function deleteSelectedTask() {
+    if (selectedTask) {
+        selectedTask.remove();
+        updatePieChart();
+        updateAllEmptyStates();
+        selectedTask = null;
+    }
+}
+
+function reorderTask(e, direction) {
+    e.stopPropagation();
+    const task = e.target.closest('.tasks');
+    const container = task.parentElement;
+    
+    if (direction === 'up' && task.previousElementSibling) {
+        container.insertBefore(task, task.previousElementSibling);
+    } else if (direction === 'down' && task.nextElementSibling) {
+        container.insertBefore(task.nextElementSibling, task);
     }
     
-    draggedTask = null;
+    updateTaskPositions(container);
+    scrollToTask(task);
 }
