@@ -1104,7 +1104,7 @@ function displayCurrentEvent() {
                 const event = eduContent[index][1];
                 if (event.thumbnail && event.thumbnail !== 'No thumbnail available') {
                     bgDiv.style.backgroundImage = `
-                        linear-gradient(to right, rgba(45, 21, 16, 1), rgba(90, 49, 32, 0.7) 100%),
+                        linear-gradient(to right, rgba(45, 21, 16, 1), rgba(90, 49, 32, 0.8) 100%),
                         url('${event.thumbnail}')
                     `;
                 } else {
