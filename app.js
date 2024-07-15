@@ -1020,6 +1020,7 @@ document.addEventListener('DOMContentLoaded', function() {
     showDiv(prodMain);
     updatePieChart();
     updateTaskInteractionMode();
+    updateAllEmptyStates();
 });
 
 window.addEventListener('resize', updateTaskInteractionMode);
