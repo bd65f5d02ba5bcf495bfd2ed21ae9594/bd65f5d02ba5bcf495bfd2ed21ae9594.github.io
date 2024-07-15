@@ -287,7 +287,10 @@ const APPController = (function(UICtrl, APICtrl) {
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
     APPController.init();
+    updateTaskInteractionMode();
 });
+
+window.addEventListener('resize', updateTaskInteractionMode);
 
 // Productivity Widget
 // Get all the necessary elements
@@ -347,6 +350,8 @@ function addTask() {
     scrollToTask(newTask);
     updatePieChart();
     updateAllEmptyStates();
+    makeDraggableOrSelectable(newTask);
+    updateTaskInteractionMode();
 }
 
 // Function to create a new task div
@@ -575,13 +580,23 @@ showDiv(prodMain);
 updatePieChart();
 
 function makeDraggableOrSelectable(taskDiv) {
-    if (isMobile()) {
-        taskDiv.addEventListener('click', selectTask);
-    } else {
-        taskDiv.draggable = true;
-        taskDiv.addEventListener('dragstart', dragStart);
-        taskDiv.addEventListener('dragend', dragEnd);
-    }
+    const reorderButtons = document.createElement('div');
+    reorderButtons.className = 'reorder-buttons';
+    
+    const upButton = document.createElement('button');
+    upButton.textContent = '↑';
+    upButton.addEventListener('click', (e) => reorderTask(e, 'up'));
+    
+    const downButton = document.createElement('button');
+    downButton.textContent = '↓';
+    downButton.addEventListener('click', (e) => reorderTask(e, 'down'));
+    
+    reorderButtons.appendChild(upButton);
+    reorderButtons.appendChild(downButton);
+    
+    taskDiv.appendChild(reorderButtons);
+
+    updateTaskInteractionMode();
 }
 
 let selectedTask = null;
@@ -792,7 +807,7 @@ function updateAllEmptyStates() {
 }
 
 function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 }
 
 function moveTask(e) {
@@ -842,4 +857,59 @@ function reorderTask(e, direction) {
     
     updateTaskPositions(container);
     scrollToTask(task);
+}
+
+function updateTaskInteractionMode() {
+    const tasks = document.querySelectorAll('.tasks');
+    const isMobileDevice = isMobile();
+
+    tasks.forEach(task => {
+        if (isMobileDevice) {
+            task.draggable = false;
+            task.removeEventListener('dragstart', dragStart);
+            task.removeEventListener('dragend', dragEnd);
+            task.addEventListener('click', selectTask);
+        } else {
+            task.draggable = true;
+            task.addEventListener('dragstart', dragStart);
+            task.addEventListener('dragend', dragEnd);
+            task.removeEventListener('click', selectTask);
+        }
+
+        // Toggle visibility of reorder buttons
+        const reorderButtons = task.querySelector('.reorder-buttons');
+        if (reorderButtons) {
+            reorderButtons.style.display = isMobileDevice ? 'flex' : 'none';
+        }
+    });
+
+    // Update event listeners for category circles
+    const circles = document.querySelectorAll('.circle:not(.white)');
+    circles.forEach(circle => {
+        if (isMobileDevice) {
+            circle.removeEventListener('dragover', dragOver);
+            circle.removeEventListener('dragleave', dragLeave);
+            circle.removeEventListener('drop', drop);
+            circle.addEventListener('click', moveTask);
+        } else {
+            circle.addEventListener('dragover', dragOver);
+            circle.addEventListener('dragleave', dragLeave);
+            circle.addEventListener('drop', drop);
+            circle.removeEventListener('click', moveTask);
+        }
+    });
+
+    // Update event listener for delete button
+    const deleteButton = document.querySelector('.control.delete');
+    if (isMobileDevice) {
+        deleteButton.removeEventListener('dragover', dragOverDelete);
+        deleteButton.removeEventListener('dragleave', dragLeaveDelete);
+        deleteButton.removeEventListener('drop', dropDelete);
+        deleteButton.addEventListener('click', deleteSelectedTask);
+    } else {
+        deleteButton.addEventListener('dragover', dragOverDelete);
+        deleteButton.addEventListener('dragleave', dragLeaveDelete);
+        deleteButton.addEventListener('drop', dropDelete);
+        deleteButton.removeEventListener('click', deleteSelectedTask);
+    }
 }
