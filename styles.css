@@ -518,7 +518,7 @@ select[multiple]:focus option:checked {
 }
 
 .circle:hover {
-    transform: scale(1.4);
+    transform: scale(1.7);
 }
 
 .white { background-color: #D9D0C5; }

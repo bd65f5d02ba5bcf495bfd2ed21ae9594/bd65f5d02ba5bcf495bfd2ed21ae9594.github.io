@@ -757,7 +757,7 @@ function setupCategoryCircles() {
 // Drag and Drop Functions
 function dragOver(e) {
     e.preventDefault();
-    e.target.style.transform = 'scale(1.4)';
+    e.target.style.transform = 'scale(1.7)';
 }
 
 function dragOverTask(e) {
