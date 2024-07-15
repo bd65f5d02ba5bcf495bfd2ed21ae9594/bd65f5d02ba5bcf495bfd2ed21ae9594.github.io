@@ -1,3 +1,4 @@
+// *** ENTERTAINMENT WIDGET *** 
 const entDiv = document.getElementById("ent");
 const entPref = document.getElementById("ent-preferences")
 const entCover = document.getElementById("ent-cover")
@@ -13,52 +14,54 @@ function flip(){
     flipped = entDiv.style.transform=='rotateY(0deg)'
         ? 0
         : 1;
-    
-    console.log(flipped);
 }
 
 function preferences(){
-    flip();
     if(prefVisible==0){
-        prefVisible = 1;
-        entPref.style.display = 'block';
-        if(flipped==1){
-            entPref.style.transform = 'rotateY(180deg)';
-            entInfo.style.display = 'none';
+        if(generated==0){
+            document.getElementById("spin").style.transform = 'rotate(100deg)';
+            sleep(100).then(() => {
+                flip();            
+                prefVisible = 1;
+                entPref.style.display = 'flex';
+                if(flipped==1){
+                    entPref.style.transform = 'rotateY(180deg)';
+                    entInfo.style.display = 'none';
+                } else{
+                    entPref.style.transform = 'rotateY(0deg)';
+                    entCover.style.display = 'none';
+                }
+            });
         } else{
-            entPref.style.transform = 'rotate(0deg)';
-            entCover.style.display = 'none';
+            flip();
+            prefVisible = 1;
+            entPref.style.display = 'flex';
+            if(flipped==1){
+                entPref.style.transform = 'rotateY(180deg)';
+                entInfo.style.display = 'none';
+            } else{
+                entPref.style.transform = 'rotateY(0deg)';
+                entCover.style.display = 'none';
+            }
         }
     } else{
+        flip()
         prefVisible = 0;
-        sleep(600).then(() => { 
-            entPref.style.display = 'none';
-            entInfo.style.display = 'flex';
-            entCover.style.display = 'flex';
+        sleep(400).then(() => { 
+            if(generated==1){
+                entPref.style.display = 'none';
+                entInfo.style.display = 'flex';
+                entCover.style.display = 'flex';
+            } else{
+                document.getElementById("spin").style.transform = 'rotate(0deg)';
+            }
          });
     }
-
 }
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-const element = document.getElementById('ent-cover-text');
-const basis = document.getElementById('ent-cover-text-cqi');
-function outputsize() {
-    console.log(basis.offsetWidth, basis.offsetHeight, window.getComputedStyle(basis).fontSize,  window.getComputedStyle(element).fontSize);
-    let stra = window.getComputedStyle(basis).fontSize;
-    let size = stra.substring(0,2);
-
-    if(basis.offsetHeight>=38){
-        element.style.fontSize = size/1.4 + 'px';
-    } else{
-        element.style.fontSize = size + 'px';
-    }
-}
-
-new ResizeObserver(outputsize).observe(basis)
 
 var count = 0;
 function play(){
@@ -73,20 +76,98 @@ function play(){
 }
 
 var generated = 0;
-var revealed = 0;
 function reveal(){
-    if(generated==1){
-        document.getElementById("ent-album-img").style.filter = 'blur(0px)';
-        if(revealed==0){
-            revealed = 1;
-            document.getElementById('ent-cover-button').textContent = 'INFO';
-        } else{
-            flip();
+    if(document.getElementById("cover-title").dataset.trackName){
+        if(generated==1){
+            document.getElementById("cover-title").textContent = document.getElementById("cover-title").dataset.trackName;
+            document.getElementById("album-img").style.filter = 'blur(0px)';
+            document.getElementById('cover-button').innerHTML = '<button onclick="flip()">INFO</button>';
         }
     }
 }
 
 
+const infoWrapper = document.getElementById("info-wrapper");
+const titleDiv = document.getElementById("info-title");
+const artistDiv = document.getElementById("artist");
+const albumDiv = document.getElementById("album-name");
+
+function overflowScrollInfo(textDiv) {
+    let prefix = ''
+    switch(textDiv){
+        case titleDiv:
+            prefix = 'title';
+            break;
+        case artistDiv:
+            prefix = 'artist';
+            break;
+        case albumDiv:
+            prefix = 'album';
+            break;
+        default:
+            console.log('ERROR');
+            break;
+    }
+    if (textDiv.offsetWidth > (infoWrapper.offsetWidth)) {
+        textDiv.classList.add('scrolling');
+        textDiv.classList.add('scroll-spacing');
+
+        document.getElementById(`${prefix}-2`).textContent = textDiv.textContent;
+        document.getElementById(`${prefix}-2`).classList.add('scrolling2');
+        document.getElementById(`${prefix}-2`).classList.add('scroll-spacing');
+    } else{
+        textDiv.classList.remove('scrolling');
+        document.getElementById(`${prefix}-2`).textContent = '';
+        document.getElementById(`${prefix}-2`).classList.remove('scrolling2');
+        document.getElementById(`${prefix}-2`).classList.remove('scroll-spacing');
+    }
+}
+
+const infoResizeObserver = new ResizeObserver((entries) => {
+    for (let entry of entries) {
+        if (entry.target) {
+            overflowScrollInfo(entry.target);
+        }
+    }
+});
+
+infoResizeObserver.observe(titleDiv);
+infoResizeObserver.observe(artistDiv);
+infoResizeObserver.observe(albumDiv);
+
+
+const coverWrapper = document.getElementById("ent-cover");
+const coverTitle = document.getElementById("cover-title");
+
+const coverResizeObserver = new ResizeObserver(() => {
+    (function overflowScrollCover() {
+        const scrollDiv = document.getElementById('cover-title-2')
+        if (coverTitle.offsetWidth > (coverWrapper.offsetWidth * 0.80)) {
+            coverTitle.classList.add('coverScroll');
+            coverTitle.classList.add('scroll-spacing');
+    
+            scrollDiv.style.display = 'block';
+            scrollDiv.textContent = coverTitle.textContent;
+            scrollDiv.classList.add('coverScroll2');
+            scrollDiv.classList.add('scroll-spacing');
+        } else{
+            coverTitle.parentElement.style.justifyContent = 'center';
+            coverTitle.classList.remove('coverScroll');
+            coverTitle.classList.remove('scroll-spacing');
+    
+
+            scrollDiv.style.display = 'none';
+            scrollDiv.textContent = '';
+            scrollDiv.classList.remove('coverScroll2');
+            scrollDiv.classList.remove('scroll-spacing');
+        }
+    })();
+})
+
+coverResizeObserver.observe(coverTitle);
+
+
+// API back-end
 const APIController = (function() {
     const clientId = '9166be1779354c139ed15ab76687f239';
     const clientSecret = 'bd44fcee05f2409ea59671ea0282c6cd';
@@ -140,43 +221,40 @@ const UIController = (function() {
     const DOMElements = {
         hfToken: '#hidden_token',
         genreSelect: '#genre-select',
-        // recommendButton: '#submit-container',
-        //recommendationDiv: '#recommendation'
+        recommendButton: '#ent-save'
     }
 
     return {
         inputField() {
             return {
                 genreSelect: document.querySelector(DOMElements.genreSelect),
-                // recommendButton: document.querySelector(DOMElements.recommendButton),
-                //recommendationDiv: document.querySelector(DOMElements.recommendationDiv)
+                recommendButton: document.querySelector(DOMElements.recommendButton)
             }
         },
 
         displayRecommendation(track) {
-            const audioElement = document.getElementById('track');
-            const audioSourceElement = document.getElementById('tracke');
-
             if(track.preview_url){
-                document.getElementById("tracke").src = track.preview_url
+                document.getElementById("trackSrc").src = track.preview_url;
             } else{
                 console.log('No audio preview.');
-                document.getElementById("ent-play-button").style.backgroundColor = 'gray';
-                document.getElementById("ent-play-button").style.borderColor = 'gray';
+                document.getElementById("play-button").style.backgroundColor = '#774E45';
+                document.getElementById("play-button").style.borderColor = '#774E45';
             }
 
             console.log(track.preview_url)
         
-            document.getElementById("ent-album-img").src = track.album.images[0].url;
-            document.getElementById("ent-album-cover").alt = track.album.name;
-            document.getElementById("ent-cover-text").textContent = track.name;
-            document.getElementById("ent-title").textContent = track.name;
-            document.getElementById("ent-artist").textContent = track.artists[0].name;
-            document.getElementById("ent-album-name").textContent = track.album.name;
-            document.getElementById("ent-year").textContent = track.album.release_date.split('-')[0];
-            document.getElementById("ent-link-button").href = track.external_urls.spotify;
+            document.getElementById("album-img").parentElement.innerHTML = '<img id="album-img" src="" draggable="false"></img>';
+            document.getElementById("album-img").src = track.album.images[0].url;
+            document.getElementById("album-img").style.filter = 'blur(10px)';
+            document.getElementById("album-img").alt = track.album.name;
+            document.getElementById("cover-title").dataset.trackName = track.name;
+            document.getElementById("info-title").textContent = track.name;
+            document.getElementById("artist").textContent = track.artists[0].name;
+            document.getElementById("album-name").textContent = track.album.name;
+            document.getElementById("year").textContent = track.album.release_date.split('-')[0];
+            document.getElementById("track-link").href = track.external_urls.spotify;
 
-            document.getElementById("ent-cover-text-cqi").textContent = track.name;
+            // document.getElementById("ent-cover-text-cqi").textContent = track.name;
         },
 
         storeToken(value) {
@@ -211,10 +289,11 @@ const APPController = (function(UICtrl, APICtrl) {
         if (selectedGenres.length === 0) {
             console.log('No genres selected');
             return;
+        } else{
+            document.getElementById("ent-welcome").style.display = 'none';
+            generated = 1;
         }
         const tracks = await APICtrl.getRecommendations(token, selectedGenres, 1);
-        generated = 1;
-        document.getElementById("ent-album-img").style.filter = 'blur(10px)';
         if (tracks.length > 0) {
             UICtrl.displayRecommendation(tracks[0]);
         } else {
@@ -241,19 +320,26 @@ const APPController = (function(UICtrl, APICtrl) {
         console.log(`Next update scheduled for: ${tomorrow.toLocaleString()}`);
     }
 
+    let initialRecommendationGenerated = false;
+
     const checkAndGenerateRecommendation = () => {
-        const selectedGenres = getSelectedGenres();
-        if (selectedGenres.length > 0) {
-            generateRecommendation();
-            scheduleDailyUpdate();
-            // Removes the event listener once recommendations start being generated
-            DOMInputs.genreSelect.removeEventListener('change', checkAndGenerateRecommendation);
-            // Add the new event listener for future changes
-            DOMInputs.genreSelect.addEventListener('change', handleGenreChange);
+        if (!initialRecommendationGenerated) {
+            const selectedGenres = getSelectedGenres();
+            if (selectedGenres.length > 0) {
+                generateRecommendation();
+                scheduleDailyUpdate();
+                initialRecommendationGenerated = true;
+                DOMInputs.genreSelect.removeEventListener('change', checkAndGenerateRecommendation);
+                DOMInputs.genreSelect.addEventListener('change', handleGenreChange);
+                DOMInputs.recommendButton.removeEventListener('click', checkAndGenerateRecommendation);
+            }
         }
     }
 
+    let genresChanged = false;
+
     const handleGenreChange = () => {
+        genresChanged = true;
         const selectedGenres = getSelectedGenres();
         if (selectedGenres.length > 0) {
             scheduleDailyUpdate();
@@ -269,14 +355,16 @@ const APPController = (function(UICtrl, APICtrl) {
         init() {
             console.log('App is starting');
             loadGenres();
-            checkAndGenerateRecommendation();
-            DOMInputs.genreSelect.addEventListener('change', checkAndGenerateRecommendation);
+            DOMInputs.recommendButton.addEventListener('click', checkAndGenerateRecommendation);
 
             // Check every minute if it's midnight and needs to update
             setInterval(() => {
                 const now = new Date();
                 if (now.getHours() === 0 && now.getMinutes() === 0) {
-                    generateRecommendation();
+                    if (genresChanged) {
+                        generateRecommendation();
+                        genresChanged = false;
+                    }
                     scheduleDailyUpdate();
                 }
             }, 60 * 1000); // Check every minute
@@ -287,13 +375,10 @@ const APPController = (function(UICtrl, APICtrl) {
 // Initialize the app
 document.addEventListener('DOMContentLoaded', function() {
     APPController.init();
-    updateTaskInteractionMode();
 });
 
-window.addEventListener('resize', updateTaskInteractionMode);
-
-// Productivity Widget
-// Get all the necessary elements
+// *** PRODUCTIVITY WIDGET ***
+// DOM elements
 const prodMain = document.getElementById('prod-main');
 const toDo = document.getElementById('to-do');
 const inProgress = document.getElementById('in-progress');
@@ -305,7 +390,7 @@ const greenButton = document.querySelector('.circle.green');
 const deleteButton = document.querySelector('.control.delete');
 const addButton = document.querySelector('.control.add');
 
-// Function to hide all divs
+// State Management
 function hideAllDivs() {
     prodMain.style.display = 'none';
     toDo.style.display = 'none';
@@ -313,7 +398,6 @@ function hideAllDivs() {
     done.style.display = 'none';
 }
 
-// Function to show a specific div
 function showDiv(div) {
     hideAllDivs();
     div.style.display = 'block';
@@ -326,7 +410,7 @@ function showDiv(div) {
     }
 }
 
-// Function to add a new task
+// Task Management
 function addTask() {
     let currentOpenState;
     if (toDo.style.display === 'block') {
@@ -354,7 +438,6 @@ function addTask() {
     updateTaskInteractionMode();
 }
 
-// Function to create a new task div
 function createTaskDiv() {
     const taskDiv = document.createElement('div');
     taskDiv.className = 'tasks';
@@ -427,6 +510,23 @@ function createTaskDiv() {
         taskDiv.appendChild(reorderButtons);
     }
 
+    const reorderButtons = document.createElement('div');
+    reorderButtons.className = 'reorder-buttons';
+    reorderButtons.style.display = 'none';
+    
+    const upButton = document.createElement('button');
+    upButton.textContent = '↑';
+    upButton.addEventListener('click', (e) => reorderTask(e, 'up'));
+    
+    const downButton = document.createElement('button');
+    downButton.textContent = '↓';
+    downButton.addEventListener('click', (e) => reorderTask(e, 'down'));
+    
+    reorderButtons.appendChild(upButton);
+    reorderButtons.appendChild(downButton);
+    
+    taskDiv.appendChild(reorderButtons);
+
     setupTaskResizeObserver(taskDiv);
     makeDraggableOrSelectable(taskDiv);
 
@@ -456,93 +556,6 @@ const categoryColors = {
 function updateTaskDateColor(taskDiv, categoryId) {
     const taskDate = taskDiv.querySelector('.task-date');
     taskDate.style.backgroundColor = categoryColors[categoryId];
-}
-
-// Event listeners for the buttons
-redButton.addEventListener('click', () => showDiv(toDo));
-orangeButton.addEventListener('click', () => showDiv(inProgress));
-greenButton.addEventListener('click', () => showDiv(done));
-whiteButton.addEventListener('click', () => showDiv(prodMain));
-addButton.addEventListener('click', addTask);
-
-// Initially show the main div
-showDiv(prodMain);
-
-// Update scroll visibility for all states initially
-function updateScrollVisibility(container) {
-    if (container.scrollHeight > container.clientHeight) {
-        container.style.overflowY = 'scroll';
-    } else if (container.scrollHeight < container.clientHeight) {
-        container.style.overflowY = 'hidden';
-    }
-}
-
-[toDo, inProgress, done].forEach(state => {
-    const container = state.querySelector('.tasks-container');
-    updateScrollVisibility(container);
-});
-
-// Function to update the pie chart and task count
-function updatePieChart() {
-    const todoTasks = toDo.querySelectorAll('.tasks').length;
-    const inProgressTasks = inProgress.querySelectorAll('.tasks').length;
-    const doneTasks = done.querySelectorAll('.tasks').length;
-    const totalTasks = todoTasks + inProgressTasks + doneTasks;
-    const remainingTasks = todoTasks + inProgressTasks;
-
-    const pie = document.querySelector('.pie');
-    const taskCount = pie.querySelector('.task-count');
-    const unfinishedTasks = pie.querySelector('.unfinished-tasks');
-
-    if (totalTasks === 0) {
-        // Reset the pie chart when there are no tasks
-        pie.style.setProperty('--p1', 0);
-        pie.style.setProperty('--p2', 0);
-        pie.style.setProperty('--p3', 0);
-        taskCount.innerHTML = '0';
-        unfinishedTasks.innerHTML = 'unfinished tasks';
-        return;
-    }
-
-    const todoPercentage = (todoTasks / totalTasks) * 100;
-    const inProgressPercentage = (inProgressTasks / totalTasks) * 100;
-    const donePercentage = (doneTasks / totalTasks) * 100;
-
-    pie.style.setProperty('--p1', todoPercentage);
-    pie.style.setProperty('--p2', inProgressPercentage);
-    pie.style.setProperty('--p3', donePercentage);
-
-    // Update the task count
-    taskCount.innerHTML = `${remainingTasks}`;
-
-    // Update the text
-    if (remainingTasks === 1) {
-        unfinishedTasks.innerHTML = 'unfinished task';
-    } else {
-        unfinishedTasks.innerHTML = 'unfinished tasks';
-    }
-}
-
-function sortTasks(container) {
-    const tasks = Array.from(container.children);
-    const datedTasks = tasks.filter(task => task.dataset.date);
-    const undatedTasks = tasks.filter(task => !task.dataset.date);
-
-    // Sort dated tasks
-    datedTasks.sort((a, b) => {
-        const dateA = new Date(a.dataset.date);
-        const dateB = new Date(b.dataset.date);
-        return dateA - dateB;
-    });
-
-    // Clear container
-    container.innerHTML = '';
-
-    // Append undated tasks first, maintaining their order
-    undatedTasks.forEach(task => container.appendChild(task));
-
-    // Append dated tasks
-    datedTasks.forEach(task => container.appendChild(task));
 }
 
 function setupTaskResizeObserver(taskElement) {
@@ -575,10 +588,92 @@ function setupTaskResizeObserver(taskElement) {
     resizeObserver.observe(taskWrittenText);
 }
 
-// Initially show the main div and update the pie chart
-showDiv(prodMain);
-updatePieChart();
+// Event listeners for the buttons
+redButton.addEventListener('click', () => showDiv(toDo));
+orangeButton.addEventListener('click', () => showDiv(inProgress));
+greenButton.addEventListener('click', () => showDiv(done));
+whiteButton.addEventListener('click', () => showDiv(prodMain));
+addButton.addEventListener('click', addTask);
 
+// Scrollbar Visibility
+function updateScrollVisibility(container) {
+    if (container.scrollHeight > container.clientHeight) {
+        container.style.overflowY = 'scroll';
+    } else if (container.scrollHeight < container.clientHeight) {
+        container.style.overflowY = 'hidden';
+    }
+}
+
+[toDo, inProgress, done].forEach(state => {
+    const container = state.querySelector('.tasks-container');
+    updateScrollVisibility(container);
+});
+
+// Pie Chart Management
+function updatePieChart() {
+    const todoTasks = toDo.querySelectorAll('.tasks').length;
+    const inProgressTasks = inProgress.querySelectorAll('.tasks').length;
+    const doneTasks = done.querySelectorAll('.tasks').length;
+    const totalTasks = todoTasks + inProgressTasks + doneTasks;
+    const remainingTasks = todoTasks + inProgressTasks;
+
+    const pie = document.querySelector('.pie');
+    const taskCount = pie.querySelector('.task-count');
+    const unfinishedTasks = pie.querySelector('.unfinished-tasks');
+
+    if (totalTasks === 0) {
+        // Reset the pie chart when there are no tasks
+        pie.style.setProperty('--p1', 0);
+        pie.style.setProperty('--p2', 0);
+        pie.style.setProperty('--p3', 100);
+        taskCount.innerHTML = '0';
+        unfinishedTasks.innerHTML = 'unfinished tasks';
+        return;
+    }
+
+    const todoPercentage = (todoTasks / totalTasks) * 100;
+    const inProgressPercentage = (inProgressTasks / totalTasks) * 100;
+    const donePercentage = (doneTasks / totalTasks) * 100;
+
+    pie.style.setProperty('--p1', todoPercentage);
+    pie.style.setProperty('--p2', inProgressPercentage);
+    pie.style.setProperty('--p3', donePercentage);
+
+    // Update the task count
+    taskCount.innerHTML = `${remainingTasks}`;
+
+    // Update the text
+    if (remainingTasks === 1) {
+        unfinishedTasks.innerHTML = 'unfinished task';
+    } else {
+        unfinishedTasks.innerHTML = 'unfinished tasks';
+    }
+}
+
+//Task Sorting
+function sortTasks(container) {
+    const tasks = Array.from(container.children);
+    const datedTasks = tasks.filter(task => task.dataset.date);
+    const undatedTasks = tasks.filter(task => !task.dataset.date);
+
+    // Sort dated tasks
+    datedTasks.sort((a, b) => {
+        const dateA = new Date(a.dataset.date);
+        const dateB = new Date(b.dataset.date);
+        return dateA - dateB;
+    });
+
+    // Clear container
+    container.innerHTML = '';
+
+    // Append undated tasks first, maintaining their order
+    undatedTasks.forEach(task => container.appendChild(task));
+
+    // Append dated tasks
+    datedTasks.forEach(task => container.appendChild(task));
+}
+
+// Task Interaction
 function makeDraggableOrSelectable(taskDiv) {
     const reorderButtons = document.createElement('div');
     reorderButtons.className = 'reorder-buttons';
@@ -604,11 +699,18 @@ let selectedTask = null;
 function selectTask(e) {
     if (selectedTask) {
         selectedTask.classList.remove('selected');
+        if (isMobile()) {
+            selectedTask.querySelector('.reorder-buttons').style.display = 'none';
+        }
     }
     
     const task = e.currentTarget;
     task.classList.add('selected');
     selectedTask = task;
+    
+    if (isMobile()) {
+        task.querySelector('.reorder-buttons').style.display = 'flex';
+    }
 }
 
 function dragStart(e) {
@@ -652,6 +754,7 @@ function setupCategoryCircles() {
     }
 }
 
+// Drag and Drop Functions
 function dragOver(e) {
     e.preventDefault();
     e.target.style.transform = 'scale(1.4)';
@@ -674,7 +777,7 @@ function dragOverTask(e) {
     }
 }
 
-// Helper function to determine where to place the dragged task
+// determine where to place the dragged task
 function getDragAfterElement(container, y) {
     const draggableElements = [...container.querySelectorAll('.tasks:not(.dragging):not([data-date])')];
 
@@ -725,7 +828,7 @@ function dropWithinContainer(e) {
     const task = document.getElementById(taskId);
     const container = e.currentTarget;
 
-    // Only allow reordering if the task doesn't have a date and it's in the same container
+    // Only allow reordering if task has no date and in the same container
     if (!task.dataset.date && container === task.parentElement) {
         const afterElement = getDragAfterElement(container, e.clientY);
         if (afterElement == null) {
@@ -766,7 +869,7 @@ function dropDelete(e) {
     e.target.classList.remove('delete-hover');
 }
 
-// function to handle scrolling to a specific task
+// Helper Functions
 function scrollToTask(task) {
     const container = task.closest('.tasks-container');
     if (container.scrollHeight > container.clientHeight) {
@@ -876,14 +979,13 @@ function updateTaskInteractionMode() {
             task.removeEventListener('click', selectTask);
         }
 
-        // Toggle visibility of reorder buttons
+        // create reorder buttons, but hidden by default
         const reorderButtons = task.querySelector('.reorder-buttons');
         if (reorderButtons) {
-            reorderButtons.style.display = isMobileDevice ? 'flex' : 'none';
+            reorderButtons.style.display = 'none';
         }
     });
 
-    // Update event listeners for category circles
     const circles = document.querySelectorAll('.circle:not(.white)');
     circles.forEach(circle => {
         if (isMobileDevice) {
@@ -899,7 +1001,6 @@ function updateTaskInteractionMode() {
         }
     });
 
-    // Update event listener for delete button
     const deleteButton = document.querySelector('.control.delete');
     if (isMobileDevice) {
         deleteButton.removeEventListener('dragover', dragOverDelete);
@@ -912,4 +1013,240 @@ function updateTaskInteractionMode() {
         deleteButton.addEventListener('drop', dropDelete);
         deleteButton.removeEventListener('click', deleteSelectedTask);
     }
+}
+
+// Initialization
+document.addEventListener('DOMContentLoaded', function() {
+    showDiv(prodMain);
+    updatePieChart();
+    updateTaskInteractionMode();
+});
+
+window.addEventListener('resize', updateTaskInteractionMode);
+
+// *** EDUCATIONAL WIDGET ***
+const today = new Date();
+const month = String(today.getMonth() + 1).padStart(2, '0');
+const day = String(today.getDate()).padStart(2, '0');
+const currentYear = today.getFullYear();
+const date = new Date(2000, month - 1, day);
+const dateString = date.toLocaleString('en-US', { month: 'long', day: 'numeric' }) + ',';
+
+let eduContent = [];
+let currentIndex = 0;
+let isAnimating = false;
+
+async function fetchHistoricalEvents() {
+    let url = `https://api.wikimedia.org/feed/v1/wikipedia/en/onthisday/all/${month}/${day}`;
+
+    try {
+        let response = await fetch(url, {
+            headers: {
+                'User-Agent': 'On This Day in History/1.0 jarron.decrepito26@gmail.com'
+            }
+        });
+
+        let data = await response.json();
+
+        function getRandomItem(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function extractDetails(item, isHoliday = false) {
+            return {
+                text: item.text,
+                year: isHoliday ? currentYear : item.year,
+                thumbnail: item.pages[0]?.thumbnail?.source || 'No thumbnail available'
+            };
+        }
+
+        eduContent = [
+            ['events', extractDetails(getRandomItem(data.events))],
+            ['births', extractDetails(getRandomItem(data.births))],
+            ['deaths', extractDetails(getRandomItem(data.deaths))],
+            ['holidays', extractDetails(getRandomItem(data.holidays), true)],
+            ['selected', extractDetails(getRandomItem(data.selected))]
+        ];
+
+        console.log('Historical Events:', eduContent);
+    } catch (error) {
+        console.error(error);
+        eduContent = [];
+    }
+}
+
+function displayCurrentEvent() {
+    if (eduContent.length > 0) {
+        const prevIndex = (currentIndex - 1 + eduContent.length) % eduContent.length;
+        const nextIndex = (currentIndex + 1) % eduContent.length;
+
+        const displayEvent = (index, prefix) => {
+            const category = eduContent[index][0];
+            const event = eduContent[index][1];
+            const contentDiv = document.getElementById(`edu-${prefix}`);
+            const bgDiv = document.getElementById(`edu-${prefix}-bg`);
+
+            const displayCategory = category === 'selected' ? 'events' : category;
+            
+            document.getElementById(`${prefix}-category`).textContent = displayCategory.charAt(0).toUpperCase() + displayCategory.slice(1);
+            document.getElementById(`${prefix}-year`).textContent = event.year;
+            contentDiv.textContent = event.text;
+
+            if (bgDiv) {
+                const event = eduContent[index][1];
+                if (event.thumbnail && event.thumbnail !== 'No thumbnail available') {
+                    bgDiv.style.backgroundImage = `
+                        linear-gradient(to right, rgba(45, 21, 16, 1), rgba(90, 49, 32, 0.8) 100%),
+                        url('${event.thumbnail}')
+                    `;
+                } else {
+                    bgDiv.style.backgroundImage = `rgb(90, 49, 32)`;
+                }
+            }
+
+            let size = parseInt(window.getComputedStyle(contentDiv).fontSize);
+
+            function resize() {
+                if (contentDiv.offsetHeight > (bgDiv.offsetHeight) * 0.68) {
+                    while (contentDiv.offsetHeight > (bgDiv.offsetHeight) * 0.68) {
+                        size--;
+                        contentDiv.style.fontSize = size + 'px';
+                    }
+                }
+            }
+
+            const resizeObserver = new ResizeObserver(() => {
+                contentDiv.style.fontSize = '';
+                size = parseInt(window.getComputedStyle(contentDiv).fontSize);
+                resize();
+            });
+
+            resizeObserver.observe(contentDiv);
+            resizeObserver.observe(bgDiv);
+        };
+
+        displayEvent(currentIndex, "current");
+        displayEvent(nextIndex, "next");
+        displayEvent(prevIndex, "prev");
+
+        document.getElementById("edu-date").textContent = dateString;
+    } else {
+        console.error("No historical events fetched");
+    }
+}
+
+const eduSlider = document.getElementById("edu-content-section");
+const eduCategory = document.getElementById("edu-category");
+const eduYear = document.getElementById("edu-year");
+
+function nextEvent() {
+    if (!isAnimating) {
+        isAnimating = true;
+        eduSlider.style.transition = "0.6s ease";
+        eduSlider.style.transform = "translateY(-66.6666%)";
+    
+        sleep(400).then(() => { 
+            eduCategory.style.transition = "0.6s ease";
+            eduCategory.style.transform = 'translateY(-66.6666%)';
+            eduYear.style.transition = "0.6s ease";
+            eduYear.style.transform = 'translateY(-66.6666%)';
+            sleep(600).then(() => {
+                currentIndex = (currentIndex + 1) % eduContent.length;
+                displayCurrentEvent();
+                eduCategory.style.transition = "none";
+                eduCategory.style.transform = 'translateY(-33.3333%)';
+                eduYear.style.transition = "none";
+                eduYear.style.transform = 'translateY(-33.3333%)';
+                eduSlider.style.transition = "none";
+                eduSlider.style.transform = "translateY(-33.3333%)";
+                isAnimating = false;
+                resetAutoNextTimer();
+            });
+        });
+    }
+}
+
+function prevEvent() {
+    if (!isAnimating) {
+        isAnimating = true;
+        eduSlider.style.transition = "0.6s ease";
+        eduSlider.style.transform = "translateY(0%)";
+        
+        sleep(400).then(() => { 
+            eduCategory.style.transition = "0.6s ease";
+            eduCategory.style.transform = 'translateY(0%)';
+            eduYear.style.transition = "0.6s ease";
+            eduYear.style.transform = 'translateY(0%)';
+            sleep(600).then(() => {
+                currentIndex = (currentIndex - 1 + eduContent.length) % eduContent.length;
+                displayCurrentEvent();
+                eduCategory.style.transition = "none";
+                eduCategory.style.transform = 'translateY(-33.3333%)';
+                eduYear.style.transition = "none";
+                eduYear.style.transform = 'translateY(-33.3333%)';
+                eduSlider.style.transition = "none";
+                eduSlider.style.transform = "translateY(-33.3333%)";
+                isAnimating = false;
+                resetAutoNextTimer();
+            });
+        });
+    }
+}
+
+async function initEduContent() {
+    await fetchHistoricalEvents();
+    displayCurrentEvent();
+    resetAutoNextTimer();
+}
+
+initEduContent();
+
+let startY = 0;
+let dragging = false;
+let eventTriggered = false;
+
+function handleStart(e) {
+    startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+    dragging = true;
+    eventTriggered = false;
+    resetAutoNextTimer();
+}
+
+function handleMove(e) {
+    if (dragging) {
+        const currentY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        const deltaY = startY - currentY;
+
+        if (deltaY > 10 && !eventTriggered) {
+            nextEvent();
+            eventTriggered = true;
+        } else if (deltaY < -10 && !eventTriggered) {
+            prevEvent();
+            eventTriggered = true;
+        }
+
+        startY = currentY;
+        resetAutoNextTimer();
+    }
+}
+
+function handleEnd() {
+    dragging = false;
+    resetAutoNextTimer();
+}
+
+// Add mouse event listeners
+eduSlider.addEventListener('mousedown', handleStart);
+document.addEventListener('mousemove', handleMove);
+document.addEventListener('mouseup', handleEnd);
+
+// Add touch event listeners
+eduSlider.addEventListener('touchstart', handleStart);
+document.addEventListener('touchmove', handleMove);
+document.addEventListener('touchend', handleEnd);
+
+let autoNextTimer;
+function resetAutoNextTimer() {
+    clearTimeout(autoNextTimer);
+    autoNextTimer = setTimeout(nextEvent, 20000);
 }

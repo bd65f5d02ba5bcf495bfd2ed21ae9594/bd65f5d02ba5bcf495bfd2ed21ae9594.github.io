@@ -12,69 +12,97 @@
     <div class="container">
         <div class="top-box">
             <div class="small-box" id="ent">
-                <div id="ent-preferences">
+                <div class="side" id="ent-welcome">
+                    <div class="ent-top">
+                        Welcome.
+                    </div>
+                    <div class="ent-center">
+                        <button onclick="preferences()" id="spin">
+                            <ion-icon name="settings-sharp"></ion-icon>
+                        </button>
+                    </div>
+                    <div class="ent-bottom">
+                        Click the gear icon to set your preferred genre/s.
+                    </div>
+                </div>
+                <div class="side" id="ent-preferences">
                     <button class="ent-button" onclick="preferences()">
-                        <ion-icon name="musical-notes-outline"></ion-icon>
+                        <ion-icon name="musical-notes"></ion-icon>
                     </button>
-                    <h2>Preferences</h3>
-                    <input type="hidden" id='hidden_token'>
-                    <select multiple id="genre-select">
-                        <option value="classical">Classical</option>
-                        <option value="jazz">Jazz</option>
-                        <option value="rock">Rock</option>
-                        <option value="pop">Pop</option>
-                        <option value="hip-hop">Hip Hop</option>
-                        <option value="r-n-b">R&B</option>
-                        <option value="edm">EDM</option>
-                        <option value="country">Country</option>
-                        <option value="reggae">Reggae</option>
-                        <option value="blues">Blues</option>
-                        <option value="folk">Folk</option>
-                        <option value="world-music">World</option>
-                        <option value="metal">Metal</option>
-                        <option value="punk">Punk</option>
-                        <option value="gospel">Gospel</option>
-                        <option value="alternative">Alternative</option>
-                    </select>
-                    <div class="submit-container">
-                        <button id="ent-save" onclick="preferences()">
+                    <div class="ent-top">Preferences</div>
+                    <div class="ent-center" id="ent-select">                    
+                        <input type="hidden" id='hidden_token'>
+                        <select multiple id="genre-select">
+                            <option value="classical">Classical</option>
+                            <option value="jazz">Jazz</option>
+                            <option value="rock">Rock</option>
+                            <option value="pop">Pop</option>
+                            <option value="hip-hop">Hip Hop</option>
+                            <option value="r-n-b">R&B</option>
+                            <option value="edm">EDM</option>
+                            <option value="country">Country</option>
+                            <option value="reggae">Reggae</option>
+                            <option value="blues">Blues</option>
+                            <option value="folk">Folk</option>
+                            <option value="world-music">World</option>
+                            <option value="metal">Metal</option>
+                            <option value="punk">Punk</option>
+                            <option value="gospel">Gospel</option>
+                            <option value="alternative">Alternative</option>
+                        </select></div>
+                    <div class="ent-bottom" id="ent-save">
+                        <button onclick="preferences()">
                             <ion-icon name="checkmark-sharp" id="ent-check"></ion-icon>
                         </button>
                     </div>
                 </div>
-                <div id="ent-cover">
+                <div class="side" id="ent-cover">
                     <button class="ent-button" onclick="preferences()">
-                        <ion-icon name="settings-outline"></ion-icon>
+                        <ion-icon name="settings-sharp"></ion-icon>
                     </button>
-                    <div class="ent-text-wrap">
-                        <p id="ent-cover-text">Today's Pick</p>
-                        <p id="ent-cover-text-cqi">Today's pick</p>
+                    <div class="ent-top">
+                        <div id="cover-title" data-track-name="">Today's Pick</div>
+                        <div id="cover-title-2"></div>
                     </div>
-                    <div id="ent-album-cover">
-                        <img src="entImg.png" id="ent-album-img"></img>
+                    <div class="ent-center">
+                        <img id="album-img" src="entLoading.gif" draggable="false"></img>
+                    </div id="">
+                    <div class="ent-bottom" id="cover-button">
+                        <button onclick="reveal()">REVEAL</button>
                     </div>
-                    <button id="ent-cover-button" onclick="reveal()">REVEAL</button>
                 </div>
-                <div id="ent-info">
+                <div class="side" id="ent-info">
                     <button class="ent-button" onclick="preferences()">
-                        <ion-icon name="settings-outline"></ion-icon>
+                        <ion-icon name="settings-sharp"></ion-icon>
                     </button>
-                    <div>
-                        <h1 class="ent-ellipsis" id="ent-title">Title</h1>
-                        <p class="ent-detail ent-ellipsis" id="ent-artist">artist</p>
+                    <div id="info-wrapper">
+                        <div class="info-title">
+                            <div id="info-title"></div><div class="scroll-div" id="title-2"></div>
+                        </div>
+                        <div class="artist">
+                            <div id="artist"></div><div class="scroll-div" id="artist-2"></div>
+                        </div>
+                        <div class="album-name">
+                            <div id="album-name"></div><div class="scroll-div" id="album-2"></div>
+                        </div>
                     </div>
-                    <div id="ent-info-div2">
-                        <p class="ent-detail ent-ellipsis" id="ent-album-name">album</p>
-                        <p class="ent-detail" id="ent-year">year</p>
+                    <div id="year">
+                        year
                     </div>
-                    <div id="ent-info-div3">
+                    <div class="ent-bottom">
                         <audio id="track" controls style="display: none;">
-                            <source id="tracke" src="" type="audio/mpeg">
+                            <source id="trackSrc" src="" type="audio/mpeg">
                             Your browser does not support the audio element.
                         </audio>
-                        <button class="ent-info-button" id="ent-back-button" onclick="flip()"><ion-icon name="chevron-back-sharp"></ion-icon></button>
-                        <a href="" class="ent-info-button" id="ent-link-button"><ion-icon name="link-sharp"></ion-icon></a>
-                        <button class="ent-info-button" id="ent-play-button" onclick="play()"><ion-icon name="play"></ion-icon></button>
+                        <button class="info-button" onclick="flip()">
+                            <ion-icon name="chevron-back-sharp"></ion-icon>
+                        </button>
+                        <button class="info-button">
+                            <a href="" id="track-link"><ion-icon name="link-sharp"></ion-icon></a>
+                        </button>
+                        <button class="info-button" id="play-button">
+                            <ion-icon name="play" onclick="play()"></ion-icon>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -117,6 +145,38 @@
             </div>
         </div>
         <div class="bottom-box" id ="edu">
+            <div id="edu-date-section">
+                <div class="text-scroll-wrapper" id="category-wrapper">
+                    <div class="text-scroll" id="edu-category">
+                        <div id="prev-category">category0</div>
+                        <div id="current-category">category1</div>
+                        <div id="next-category">category2</div>
+                    </div>
+                </div>
+                <div id="on-this-day">ON THIS DAY</div>
+                <div id="edu-date">[date]</div>
+                <div class="text-scroll-wrapper" id="year-wrapper">
+                    <div class="text-scroll" id="edu-year">
+                        <div id="prev-year">YEAR0</div>
+                        <div id="current-year">YEAR1</div>
+                        <div id="next-year">YEAR2</div>
+                    </div>
+                </div>
+            </div>
+            <div id="edu-content-section" data-mouse-down-at="0">
+                <div id="edu-prev-bg">
+                    <div id="edu-prev">
+                    </div>
+                </div>
+                <div id="edu-current-bg">
+                    <div id="edu-current">
+                    </div>
+                </div>
+                <div id='edu-next-bg'>
+                    <div id="edu-next">
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <script src="app.js"></script>
