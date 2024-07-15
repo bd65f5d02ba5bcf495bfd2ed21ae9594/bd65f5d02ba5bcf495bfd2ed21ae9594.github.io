@@ -506,7 +506,7 @@ select[multiple]:focus option:checked {
     height: 100%;
 }
 
-/* Circles   */
+/* Circles */
 .circle {
     width: 10%;
     aspect-ratio: 1 / 1;

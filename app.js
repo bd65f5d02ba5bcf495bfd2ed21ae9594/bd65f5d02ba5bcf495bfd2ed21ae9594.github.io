@@ -622,7 +622,7 @@ function updatePieChart() {
     const unfinishedTasks = pie.querySelector('.unfinished-tasks');
 
     if (totalTasks === 0) {
-        // Reset the pie chart when there are no tasks
+        // Reset pie chart when there are no tasks
         pie.style.setProperty('--p1', 0);
         pie.style.setProperty('--p2', 0);
         pie.style.setProperty('--p3', 100);
