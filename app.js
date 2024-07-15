@@ -910,7 +910,7 @@ function updateAllEmptyStates() {
 }
 
 function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    return window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 }
 
 function moveTask(e) {
