@@ -832,7 +832,6 @@ function drop(e) {
         updateTaskPositions(targetContainer);
         applyReorderAnimation(task);
         updatePieChart();
-        scrollToTask(task);
         updateAllEmptyStates();
 
         // Show the corresponding state view
@@ -843,6 +842,7 @@ function drop(e) {
         } else if (targetContainer === done.querySelector('.tasks-container')) {
             showDiv(done);
         }
+        scrollToTask(task);
     }
 
     e.target.style.transform = '';
