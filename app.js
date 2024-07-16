@@ -47,7 +47,7 @@ function preferences(){
     } else{
         flip()
         prefVisible = 0;
-        sleep(400).then(() => { 
+        sleep(350).then(() => { 
             if(generated==1){
                 entPref.style.display = 'none';
                 entInfo.style.display = 'flex';
@@ -433,6 +433,10 @@ function addTask() {
 
     const tasksContainer = currentOpenState.querySelector('.tasks-container');
     const newTask = createTaskDiv();
+    
+    // Add the pop-in class
+    newTask.classList.add('pop-in');
+    
     tasksContainer.appendChild(newTask);
     updateTaskDateColor(newTask, currentOpenState.id);
     
@@ -443,6 +447,11 @@ function addTask() {
     updateAllEmptyStates();
     makeDraggableOrSelectable(newTask);
     updateTaskInteractionMode();
+
+    // Remove the pop-in class after animation completes
+    setTimeout(() => {
+        newTask.classList.remove('pop-in');
+    }, 300);
 }
 
 function createTaskDiv() {
@@ -821,9 +830,19 @@ function drop(e) {
         targetContainer.appendChild(task);
         updateTaskDateColor(task, targetContainer.closest('.state').id);
         updateTaskPositions(targetContainer);
+        applyReorderAnimation(task);
         updatePieChart();
         scrollToTask(task);
         updateAllEmptyStates();
+
+        // Show the corresponding state view
+        if (targetContainer === toDo.querySelector('.tasks-container')) {
+            showDiv(toDo);
+        } else if (targetContainer === inProgress.querySelector('.tasks-container')) {
+            showDiv(inProgress);
+        } else if (targetContainer === done.querySelector('.tasks-container')) {
+            showDiv(done);
+        }
     }
 
     e.target.style.transform = '';
@@ -835,7 +854,6 @@ function dropWithinContainer(e) {
     const task = document.getElementById(taskId);
     const container = e.currentTarget;
 
-    // Only allow reordering if task has no date and in the same container
     if (!task.dataset.date && container === task.parentElement) {
         const afterElement = getDragAfterElement(container, e.clientY);
         if (afterElement == null) {
@@ -843,16 +861,28 @@ function dropWithinContainer(e) {
         } else {
             container.insertBefore(task, afterElement);
         }
+        
+        applyReorderAnimation(task);
+        if (afterElement) {
+            applyReorderAnimation(afterElement);
+        }
     } else if (container !== task.parentElement) {
-        // If it's a different container, allow the move
         container.appendChild(task);
         updateTaskDateColor(task, container.closest('.state').id);
+        applyReorderAnimation(task);
     }
 
     sortTasks(container);
     updatePieChart();
     scrollToTask(task);
     updateAllEmptyStates();
+}
+
+function applyReorderAnimation(task) {
+    task.classList.add('reordering');
+    setTimeout(() => {
+        task.classList.remove('reordering');
+    }, 300);
 }
 
 function dragOverDelete(e) {
@@ -959,10 +989,18 @@ function reorderTask(e, direction) {
     const task = e.target.closest('.tasks');
     const container = task.parentElement;
     
+    let siblingTask;
     if (direction === 'up' && task.previousElementSibling) {
-        container.insertBefore(task, task.previousElementSibling);
+        siblingTask = task.previousElementSibling;
+        container.insertBefore(task, siblingTask);
     } else if (direction === 'down' && task.nextElementSibling) {
-        container.insertBefore(task.nextElementSibling, task);
+        siblingTask = task.nextElementSibling;
+        container.insertBefore(siblingTask, task);
+    }
+    
+    if (siblingTask) {
+        applyReorderAnimation(task);
+        applyReorderAnimation(siblingTask);
     }
     
     updateTaskPositions(container);
